@@ -10,7 +10,6 @@ module.exports.userLogin = async (req, res) => {
         const {email,password} = req.body;
 
         //const user = await userModel.findOne({email})
-        const user = await userModel.findOne({ email }).select('+password')
        console.log(user,"====user ");
 
     } catch (error) {
