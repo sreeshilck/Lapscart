@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,19 +8,34 @@ import { useForm } from "react-hook-form";
 function Login() {
 
     const { register, handleSubmit, formState: { errors } } = useForm();
-    // const [values, setValues] = useState({
-    //     email: "",
-    //     password: "",
-    // })
+   
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const onSubmit = async (data) => {
+    const {data} = useSelector((state) => state.userLogin)
+    
 
+    
+    
+    useEffect(() =>{
+    //const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+        if (data.length != 0) {
+            if (data.isLogged) {
+                localStorage.setItem("loginDetails", JSON.stringify(data));
+                navigate('/')
+            } else {
+                toast.error(data.msg, {
+                    id:'logverifyErr'
+                })
+            }
+        }
+    },[data])
+
+    const onSubmit = async (data) => {
         dispatch(userLoginData(data));
     }
     if (errors.email) {
-        toast.error(errors.email.message, {ś
+        toast.error(errors.email.message, {
             id: 'emailErr'
         });
         
@@ -53,14 +68,12 @@ function Login() {
                                 className="block text-sm font-medium text-gray-700 undefined"
                             >
                                 Email
-                      ś      </label>
+                            </label>
                             <div className="flex flex-col items-start">
                                 <input
                                     type="email"
                                     name="email"
                                     className="block w-full h-10 mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-[#A7F4A7] outline-none focus:ring-opacity-50 bg-gray-100"
-                                    // onChange={(e) =>
-                                    //     setValues({ ...values, [e.target.name]: e.target.value })}
                                     {...register("email", { required: "Email is required", pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Enter valid email" } })}
                                 />
                             </div>
@@ -78,8 +91,6 @@ function Login() {
                                     type="password"
                                     name="password"
                                     className="block w-full h-10 mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-[#A7F4A7] outline-none focus:ring-opacity-50 bg-gray-100"
-                                    // onChange={(e) =>
-                                    //     setValues({ ...values, [e.target.name]: e.target.value })}
                                     {...register("password", {
                                         required: "Password is required",
                                     })}
@@ -87,12 +98,10 @@ function Login() {
                             </div>
                         </div>
 
-                        <a
-                            href="#"
-                            className="text-sm text-black hover:underline "
-                        >
-                            Forget Password?
-                        </a>
+                        
+                            <Link to='/user/forgotpassword' className='text-sm text-black hover:underline '>Forget Password?</Link>
+                            
+                    
                         <div className="flex items-center mt-4">
                             <button type='submit' className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-[#A7F4A7] rounded-md  focus:outline-none  focus:bg-[#A7F4A7] font-bold">
                                 Login

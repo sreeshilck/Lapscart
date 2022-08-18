@@ -8,12 +8,6 @@ function Verifyotp() {
 
     const [otp, setOtp] = useState("");
     const navigate = useNavigate()
-    //const res = useSelector((state) => state.userRegister)
-
-    //console.log(res, "resssssss");
-
-    // localStorage.setItem('details', JSON.stringify(res.data));
-
 
     const handleSubmit = async () => {
         const details = JSON.parse(localStorage.getItem('details'));

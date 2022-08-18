@@ -7,7 +7,7 @@ function Navbar() {
             <div className="justify-between px-4 mx-auto lg:max-w-7xl md:items-center md:flex md:px-8">
                 <div>
                     <div className="flex items-center justify-between py-3 md:py-5 md:block">
-                        <a href="javascript:void(0)">
+                        <a href="">
                             <h2 className="text-2xl font-bold text-black"><span className='text-[#A7F4A7] text-4xl'>L</span>apscart</h2>
                         </a>
                         <div className="md:hidden">
@@ -55,16 +55,16 @@ function Navbar() {
                     >
                         <ul className="items-center justify-center space-y-8 md:flex md:space-x-6 md:space-y-0 font-bold text-black">
                             <li className=" hover:text-[#A7F4A7] ">
-                                <a href="javascript:void(0)">Home</a>
+                                <a href="">Home</a>
                             </li>
                             <li className=" hover:text-[#A7F4A7]">
-                                <a href="javascript:void(0)">Shop</a>
+                                <a href="">Shop</a>
                             </li>
                             <li className=" hover:text-[#A7F4A7]">
-                                <a href="javascript:void(0)">About US</a>
+                                <a href="">About US</a>
                             </li>
                             <li className=" hover:text-[#A7F4A7]">
-                                <a href="javascript:void(0)">Contact US</a>
+                                <a href="">Contact US</a>
                             </li>
                         </ul>
 
