@@ -13,21 +13,21 @@ function Verifyotp() {
         const details = JSON.parse(localStorage.getItem('details'));
         if (details.user) {
             const userId = details.user;
-            
+
             await axios.post(`http://localhost:5000/api/user/verifyotp`, { otp, userId })
                 .then(res => {
                     if (res.data.verified) {
                         // navigate to home success
-                        toast.success('OTP Verification Success', {
-                            id:'OTPverifySuccess'
+                        toast.success('OTP Verification Success Please Login to Contiue,', {
+                            id: 'OTPverifySuccess'
                         });
-                        navigate("/");
+                        navigate("/user/login");
                     } else {
                     }
                 }).catch(error => {
-                    
-                    toast.error(error.response.data.msg,{
-                        id:'OTPVerifyFailed'
+
+                    toast.error(error.response.data.msg, {
+                        id: 'OTPVerifyFailed'
                     })
                 })
         }
@@ -39,16 +39,16 @@ function Verifyotp() {
     const handleResend = async () => {
         const details = JSON.parse(localStorage.getItem('details'));
         const userId = details.user;
-        await axios.get(`http://localhost:5000/api/user/resendotp/${userId}`, )
-        .then(res => {
-            toast.success("OTP send successfully",{
-                id:'OTPSendSuccess'
+        await axios.get(`http://localhost:5000/api/user/resendotp/${userId}`,)
+            .then(res => {
+                toast.success("OTP send successfully", {
+                    id: 'OTPSendSuccess'
+                })
+            }).catch(error => {
+                toast.error("Something went wrong try again..", {
+                    id: 'OTPSendFailed'
+                })
             })
-        }).catch(error => {
-            toast.error("Something went wrong try again..", {
-                id:'OTPSendFailed'
-            })
-        })
     }
 
     return (
@@ -72,10 +72,11 @@ function Verifyotp() {
                                 onClick={handleSubmit}>
                                 Submit
                             </button>
-                            <button
+
+                            <Link to='/'
                                 className="w-full mt-2  p-2.5 flex-1 text-gray-800 rounded-md outline-none border ring-offset-2 ring-gray-200 focus:ring-2">
                                 Cancel
-                            </button>
+                            </Link>
                         </div>
                         <h5>Didn't get OTP? <span className='font-bold mt-3 cursor-pointer' onClick={handleResend}>Resend</span></h5>
                     </div>

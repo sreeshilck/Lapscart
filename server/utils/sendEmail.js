@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 
+//send reset url mail 
 const sendEmail = async options => {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,

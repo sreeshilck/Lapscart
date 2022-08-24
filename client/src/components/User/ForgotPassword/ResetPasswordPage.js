@@ -2,32 +2,34 @@ import axios from 'axios';
 import React, { useEffect } from 'react'
 import { useForm } from "react-hook-form";
 import toast from 'react-hot-toast';
-import {useNavigate, useParams} from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 
 
 function ResetPasswordPage() {
     let params = useParams();
-  const navigate = useNavigate
+    const navigate = useNavigate();
 
-    const { register, handleSubmit,watch, formState: { errors } } = useForm();
-    
-    
+    const { register, handleSubmit, watch, formState: { errors } } = useForm();
+
+
     const onSubmit = async (data) => {
-        await axios.post(`http://localhost:5000/api/user/passwordreset/${params.token}`, data ,{
-            withCredentials:true
+        await axios.post(`http://localhost:5000/api/user/passwordreset/${params.token}`, data, {
+            withCredentials: true
         }).then((res) => {
-            console.log(res.data," == res.dataa");
-            toast.success(res.data.msg, {id:"resetsuccess"})
-            //navigate("/user/login")
-            
+            toast.success(res.data.msg, { id: "resetsuccess" })
+            navigate("/user/login")
+
 
         }).catch((errors) => {
-           // console.log(errors.response.data," ===errors.response.data");
-            // if (!errors.response) {
-            //     navigate("/user/home")
-            // }
-            // toast.error(errors.response.data.msg)
-            console.log(errors, "----errorsss");
+
+            if (!errors.response) {
+                toast.error(errors.response.data.msg, {
+                    id: 'resetErr'
+                })
+
+            }
+
+
         })
 
 
@@ -79,10 +81,10 @@ function ResetPasswordPage() {
                                 >
                                     Submit
                                 </button>
-                                <button
+                                <Link to='/user/login'
                                     className="w-full mt-2  p-2.5 flex-1 text-gray-800 rounded-md outline-none border ring-offset-2 ring-gray-200 focus:ring-2">
                                     Cancel
-                                </button>
+                                </Link>
                             </div>
                         </form>
                     </div>

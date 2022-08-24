@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from "react-hook-form";
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -18,20 +18,19 @@ function ForgotPassword() {
     }
 
     const onSubmit = async (data) => {
-        
-        const resp = await axios.post("http://localhost:5000/api/user/forgotpassword",  data,
-        {withCredentials:true}).then((res) =>{
-     console.log(res,"==ress");
-        toast.success(res.data.message, {
-            id:'resetpasswordSend'
-        });
-        }).catch((errors) => {
-            toast.error(errors.response.data.msg,{
-                id:'resetemailErr'
-            })
 
-        });
-        
+        const resp = await axios.post("http://localhost:5000/api/user/forgotpassword", data,
+            { withCredentials: true }).then((res) => {
+                toast.success(res.data.message, {
+                    id: 'resetpasswordSend'
+                });
+            }).catch((errors) => {
+                toast.error(errors.response.data.msg, {
+                    id: 'resetemailErr'
+                })
+
+            });
+
 
     }
 
@@ -59,10 +58,9 @@ function ForgotPassword() {
                                     onClick={handleSubmit}>
                                     Submit
                                 </button>
-                                <button
-                                    className="w-full mt-2  p-2.5 flex-1 text-gray-800 rounded-md outline-none border ring-offset-2 ring-gray-200 focus:ring-2">
+                                <Link to='/user/login' className="w-full mt-2  p-2.5 flex-1 text-gray-800 rounded-md outline-none border ring-offset-2 ring-gray-200 focus:ring-2">
                                     Cancel
-                                </button>
+                                </Link>
                             </div>
                         </form>
                     </div>

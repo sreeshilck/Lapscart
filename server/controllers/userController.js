@@ -2,16 +2,20 @@ const userModel = require('../models/userModel')
 const jwt = require('jsonwebtoken');
 const { sendOtp, verifyOtp } = require('../utils/twilioOtp')
 const getToken = require('../utils/getToken')
-const sendEmail = require ('../utils/sendEmail')
+const sendEmail = require('../utils/sendEmail')
 const crypto = require("crypto");
+const bcrypt = require("bcrypt")
+
 
 
 // User Signup
 // @route POST => /api/user/signup
 module.exports.userSignup = async (req, res) => {
     try {
+        let { name, email, phonenumber, password } = req.body;
 
-        const { name, email, phonenumber, password } = req.body;
+        phonenumber = +phonenumber.replace(/\D/g, '').slice(-10);
+
 
         const userExists = await userModel.findOne({ email })
         // check if user Exists
@@ -19,7 +23,6 @@ module.exports.userSignup = async (req, res) => {
 
         //create newuser
         const newUser = await userModel.create({ name, email, phonenumber, password })
-
 
         if (newUser) {
             const sendOtpRes = await sendOtp(newUser.phonenumber);
@@ -32,11 +35,11 @@ module.exports.userSignup = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        res.status(400).json({ created: false, msg: "Registration Failed Try Again..." })
+        res.status(500).json({ created: false, msg: "Registration Failed Try Again..." })
     }
 }
 
-// OTP verification 
+// Mobile OTP verification 
 // @route POST => /api/user/verifyotp
 module.exports.registerOtpVerify = async (req, res) => {
     try {
@@ -51,7 +54,7 @@ module.exports.registerOtpVerify = async (req, res) => {
 
                     await userModel.findByIdAndUpdate(userData._id, { $set: { 'verified.phone': true } })
 
-                    res.status(201).json({ user: userData._id, verified: true, note: "it is success.." })
+                    res.status(201).json({ user: userData._id, verified: true, isLoggedIn: true })
                 } else {
 
                     res.status(400).json({ user: userData._id, verified: false, msg: "Invalid OTP!!!" })
@@ -95,16 +98,16 @@ module.exports.userLogin = async (req, res) => {
         // Finding user in database
         const user = await userModel.findOne({ email })
         // check the user
-        if (!user) return res.status(400).json({ isLogged: false, msg: "Invalid Email or Password" })
+        if (!user) return res.status(400).json({ isLoggedIn: false, msg: "Invalid Email or Password" })
 
         // check if user is blocked
         if (user.isBlocked) {
-            return res.status(403).json({ msg: "You are blocked..." })
+            return res.status(403).json({ isLoggedIn: false, msg: "You are blocked..." })
         } else {
             // Checks if entered password is correct or not
             const isPasswordMatched = await user.comparePassword(password);
             if (!isPasswordMatched) {
-                return res.status(400).json({ isLogged: false, msg: "Invalid Email or Password" });
+                return res.status(400).json({ isLoggedIn: false, msg: "Invalid Email or Password" });
             } else {
                 // for token generate
                 getToken(user, 200, res);
@@ -114,19 +117,19 @@ module.exports.userLogin = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ isLogged: false, msg: "Login failed please try again.." })
+        res.status(500).json({ isLoggedIn: false, msg: "Login failed please try again.." })
     }
 }
 
 // forgot password
 // @route POST => /api/user/forgotpassword
 module.exports.forgotPassword = async (req, res) => {
-try{
-    const { email } = req.body
-    // find user
-    const user = await userModel.findOne({ email: email })
+    try {
+        const { email } = req.body
+        // find user
+        const user = await userModel.findOne({ email: email })
 
-    if (!user) return res.status(400).json({ msg: "Invalid email " })
+        if (!user) return res.status(400).json({ msg: "Invalid email " })
 
 
         const resetToken = user.getResetPasswordToken();
@@ -136,7 +139,7 @@ try{
         const resetUrl = `${process.env.BASE_URL}/user/passwordreset/${resetToken}`;
 
         let msg = `Your password reset url is as follow:\n\n${resetUrl}\n\nIf you have not requested this email, then ignore it.`
-    
+
 
         await sendEmail({
             email: user.email,
@@ -162,33 +165,128 @@ try{
 // Reset Password
 // @route POST => /api/user/passwordreset/:token
 module.exports.passwordreset = async (req, res) => {
-try {
+    try {
 
-     // Hash URL token
-     const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
+        // Hash URL token
+        const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
 
-     const user = await userModel.findOne({
-         resetPasswordToken,
-         resetPasswordExpire: { $gt: Date.now() }
-     })
-     if (!user) return res.status(400).json({url:false,msg:"invalid reset url"})
+        const user = await userModel.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        })
+        if (!user) return res.status(400).json({ url: false, msg: "invalid reset url" })
 
-     if (req.body.password != req.body.confirmpassword) return res.status(400).json({msg:"password not matching"})
+        if (req.body.password != req.body.confirmpassword) return res.status(400).json({ msg: "password not matching" })
 
-       // Set New Password
-    user.password = req.body.password;
+        // Set New Password
+        user.password = req.body.password;
 
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
 
-    await user.save();
-    res.status(200).json({msg:"Reset Password Successfull"})
-    
+        await user.save();
+        res.status(200).json({ msg: "Reset Password Successfull" })
 
-} catch (error) {
-    console.log(error);
-    res.status(500).json({msg:"Something went wrong try again.."})
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Something went wrong try again.." })
+    }
+
+
 }
 
+// User Logout
+// @route POST => /api/user/logout
+module.exports.userLogout = async (req, res) => {
 
+    try {
+        console.log(req.user, "req.userr");
+
+    } catch (error) {
+        console.log(error);
+    }
+
+}
+
+// User Profile
+// @route GET => api/user/profile
+module.exports.getUserProfile = async (req, res) => {
+    try {
+        if (req.user) {
+            const userProfile = await userModel.findById(req.user, { name: 1, email: 1, phonenumber: 1, verified: 1 });
+            // if (!userProfile.verified.email && !userProfile.verified.phone ) res.status(200).json({profile:userProfile,email:false,phone:false})
+            // else if (!userProfile.verified.email) res.status(200).json({profile:userProfile})
+            res.status(200).json({ profile: userProfile })
+        } else {
+            res.status(400).json({ msg: "no user found" })
+        }
+
+    } catch (error) {
+        res.status(500).json({ msg: "Internal Server Error " })
+    }
+
+}
+
+// Update User Name
+// @route PUT => api/user/updatename
+module.exports.updateUserName = async (req, res) => {
+    try {
+        await userModel.findByIdAndUpdate(req.user, { name: req.body.name })
+        const updateName = await userModel.findById(req.user, { name: 1 })
+        res.status(200).json({ user: updateName, updated: true, msg: "Name Updated Successfully" })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ updated: false, msg: "Internal Server Error" })
+    }
+}
+
+// Update User Phone
+// @ route PUT => api/user/updatephone
+module.exports.updateUserPhone = async (req, res) => {
+    try {
+        console.log(req.body);
+        const number = req.body.phonenumber;
+        const user = await userModel.findById(req.user, { phonenumber: 1 })
+        if (user.phonenumber == number) {
+            return res.status(200)
+        } else {
+            const sendOtpRes = await sendOtp(number);
+            res.status(200).json({ sent: true, msg: "OTP Sent Successfully" })
+        }
+
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ sent: false, msg: "Internal Server Error" })
+    }
+}
+
+// Update User Password
+// @ route PUT => /api/user/changepassword
+module.exports.updateUserPassword = async (req, res) => {
+    try {
+        const { oldpassword, newpassword } = req.body
+        console.log(oldpassword, newpassword)
+        const userData = await userModel.findById(req.user)
+        //console.log(userData.password,"  userData.password");
+
+        // Compare password
+        const password = await bcrypt.compare(oldpassword, userData.password)
+
+        //retun if password doesnt match
+        if (!password) {
+            return res.status(400).json({ updated: false, msg: "Enter Correct Password" })
+        }
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        hashpassword = await bcrypt.hash(newpassword, salt);
+        await userModel.findByIdAndUpdate(req.user, { password: hashpassword })
+        res.status(200).json({ updated: true, msg: "Password Reset Successfully" })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({})
+    }
 }

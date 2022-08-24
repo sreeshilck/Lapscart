@@ -8,28 +8,28 @@ import { useForm } from "react-hook-form";
 function Login() {
 
     const { register, handleSubmit, formState: { errors } } = useForm();
-   
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const {data} = useSelector((state) => state.userLogin)
-    
+    const { data } = useSelector((state) => state.userLogin)
 
-    
-    
-    useEffect(() =>{
-    //const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+
+
+
+    useEffect(() => {
+        //const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
         if (data.length != 0) {
-            if (data.isLogged) {
+            if (data.isLoggedIn) {
                 localStorage.setItem("loginDetails", JSON.stringify(data));
-                navigate('/')
+                 navigate('/')
             } else {
                 toast.error(data.msg, {
-                    id:'logverifyErr'
+                    id: 'logverifyErr'
                 })
             }
         }
-    },[data])
+    }, [data])
 
     const onSubmit = async (data) => {
         dispatch(userLoginData(data));
@@ -38,10 +38,10 @@ function Login() {
         toast.error(errors.email.message, {
             id: 'emailErr'
         });
-        
+
     } else if (errors.password) {
-        toast.error(errors.password.message , {
-            id:'passwordErr'
+        toast.error(errors.password.message, {
+            id: 'passwordErr'
         });
     } else {
 
@@ -98,10 +98,8 @@ function Login() {
                             </div>
                         </div>
 
-                        
-                            <Link to='/user/forgotpassword' className='text-sm text-black hover:underline '>Forget Password?</Link>
-                            
-                    
+                        <Link to='/user/forgotpassword' className='text-sm text-black hover:underline'>Forget Password?</Link>
+
                         <div className="flex items-center mt-4">
                             <button type='submit' className="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-[#A7F4A7] rounded-md  focus:outline-none  focus:bg-[#A7F4A7] font-bold">
                                 Login
@@ -114,12 +112,12 @@ function Login() {
                             <Link to="/user/signup" className="text-black hover:underline font-bold">Signup</Link>
                         </span>
                     </div>
-                    <div className="flex items-center w-full my-4">
+                    {/* <div className="flex items-center w-full my-4">
                         <hr className="w-full" />
                         <p className="px-3 ">OR</p>
                         <hr className="w-full" />
                     </div>
-                    <div className="my-6 space-y-2">
+                     <div className="my-6 space-y-2">
                         <button
                             aria-label="Login with Google"
                             type="button"
@@ -148,7 +146,7 @@ function Login() {
                             </svg>
                             <p>Login with Facebook</p>
                         </button>
-                    </div>
+                    </div>  */}
                 </div>
             </div>
 
