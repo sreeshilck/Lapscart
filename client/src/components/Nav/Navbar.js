@@ -11,39 +11,41 @@ function Navbar() {
     const navigate = useNavigate()
     let [userInfo, setUserInfo] = useState(false)
     const dispatch = useDispatch()
-    let userData = JSON.parse(localStorage.getItem('loginDetails')); 
-    //const { Utoken } = JSON.parse(localStorage.getItem('loginDetails'));
+    let userData = JSON.parse(localStorage.getItem('loginDetails'));
+
 
     useEffect(() => {
-    
-        verifyUser()
-    },[])
- 
 
-const verifyUser = () => {
-    userData = JSON.parse(localStorage.getItem('loginDetails'));
+        function verifyUser() {
 
-    if (userData) {
-        if (userData.isLoggedIn) {
-            setUserInfo(true)
-        } else {
-            setUserInfo(false)
+            userData = JSON.parse(localStorage.getItem('loginDetails'));
+
+            if (userData) {
+
+                if (userData.isLoggedIn) {
+                    setUserInfo(true)
+                } else {
+                    setUserInfo(false)
+                }
+
+            } else {
+                setUserInfo(false)
+            }
+
         }
+        verifyUser()
+    })
 
-    } else {
-        setUserInfo(false)
+    const verifyUser = () => {
+        userData = JSON.parse(localStorage.getItem('loginDetails'));
     }
-}
-
-
-
-
 
 
     const handleLogout = async () => {
         localStorage.clear('loginDetails');
-        navigate("/")
         verifyUser()
+        navigate("/")
+
         // const {Utoken} = JSON.parse(localStorage.getItem('loginDetails'));
         // await axios.post("http://localhost:5000/api/user/logout",{}, {    
         // headers: {'Authorization' : `Bearer ${Utoken}`}
@@ -56,7 +58,8 @@ const verifyUser = () => {
     }
 
     const handleUserProfile = () => {
-        dispatch(userProfileData({id: userData.ID, token: userData.Utoken }))
+        console.log(userData, " ==userData");
+        dispatch(userProfileData({ id: userData.uID, token: userData.Utoken }))
     }
 
 
@@ -152,7 +155,7 @@ const verifyUser = () => {
                     </div>
 
 
-                    {userInfo &&
+                    {userInfo && userData ?
                         <div className='space-x-8 flex justify-center align-center'>
                             <div className=''>
                                 <NavLink to='/wishlist'><HiOutlineHeart className='w-6 h-6 mt-1 cursor-pointer hover:text-[#A7F4A7]' /></NavLink>
@@ -162,39 +165,16 @@ const verifyUser = () => {
                                 <NavLink to={`/user/profile/${userData.uID}`} onClick={handleUserProfile}><FaUserAlt className='w-5 h-5 mt-1 cursor-pointer hover:text-[#A7F4A7]' /></NavLink>
                                 {/* <NavLink to='/user/profile'><FaUserAlt className='w-5 h-5 mt-1 cursor-pointer hover:text-[#A7F4A7]' /></NavLink> */}
                             </div>
-                        </div>
-                    }
 
-
-
-
-
-
-
-
-
-
-                    {!userInfo
-                        ?
-                        <div className='bg-yellow-5 flex justify-center align-center'>
-                            <Link to='/user/login' className='font-bold px-4 py-2 mt-0 text-white bg-[#A7F4A7] rounded-md shadow'>Sign In</Link>
+                            <div className='bg-yellow-5 flex justify-center align-center'>
+                                <button onClick={handleLogout}><FiLogOut className='w-6 h-6 mt-1 cursor-pointer hover:text-[#A7F4A7]' /></button>
+                            </div>
                         </div>
                         :
                         <div className='bg-yellow-5 flex justify-center align-center'>
-
-                            <button onClick={handleLogout}><FiLogOut className='w-6 h-6 mt-1 cursor-pointer hover:text-[#A7F4A7]' /></button>
+                            <Link to='/user/login' className='font-bold px-4 py-2 mt-0 text-white bg-[#A7F4A7] rounded-md shadow'>Sign In</Link>
                         </div>
-
                     }
-
-
-
-
-
-
-
-
-
 
 
                     {/* <Link to='/user/login' className="px-4 py-2 mt-0 text-white bg-[#A7F4A7] rounded-md shadow hover:bg-gray-800 font-bold">Sign In</Link> */}

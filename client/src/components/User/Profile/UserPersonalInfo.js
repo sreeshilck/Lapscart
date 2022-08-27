@@ -7,11 +7,10 @@ import { MdNotifications, MdOutlineModeEditOutline } from "react-icons/md";
 import { FiLogOut } from "react-icons/fi";
 import { useSelector, useDispatch } from 'react-redux';
 import { userProfileData } from '../../../features/User/userSlice'
-import { useForm, Controller } from "react-hook-form";
-import { toast, Toaster } from 'react-hot-toast';
-import PhoneInput from 'react-phone-input-2'
-import 'react-phone-input-2/lib/style.css'
+import { useForm } from "react-hook-form";
+import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import PhoneOTPModal from './PhoneOTPModal';
 
 function UserPersonalInfo() {
 
@@ -20,6 +19,7 @@ function UserPersonalInfo() {
   const [nameedit, setNameEdit] = useState(true)
   const [emailedit, setEmailEdit] = useState(true)
   const [phoneedit, setPhoneEdit] = useState(true)
+  const [showModal, setShowModal] = useState(false);
 
   const userData = JSON.parse(localStorage.getItem('loginDetails'));
   const { Utoken } = JSON.parse(localStorage.getItem('loginDetails'));
@@ -36,7 +36,7 @@ function UserPersonalInfo() {
 
   useEffect(() => {
 
-    dispatch(userProfileData({ id: userData.ID, token: userData.Utoken }))
+    dispatch(userProfileData({ id: userData.uID, token: userData.Utoken }))
 
   }, [])
 
@@ -55,13 +55,14 @@ function UserPersonalInfo() {
 
   const { data } = useSelector((state) => state.userProfile)
   if (data != 0) {
-    console.log("have data");
+
     if (data.profile.verified) {
-      console.log("email is false");
+
       toast.custom((t) => (
         <div
-          className={`${t.visible ? 'animate-enter' : 'animate-leave'
-            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+          className='animate-leave max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 '
+        // className={`${t.visible ? 'animate-leave' : 'animate-leave'
+        //   } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
         >
           <div className="flex-1 w-0 p-4">
             <div className="flex items-start">
@@ -69,16 +70,16 @@ function UserPersonalInfo() {
                 <img
                   className="h-10 w-10 rounded-full"
                   src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvkLDFLzwsMDNVewgtoXWEEV2jQYYyBJ2zNw&usqp=CAU"
-                  alt=""
+                  alt="L"
                 />
               </div>
               <div className="ml-3 flex-1">
                 <p className="text-sm font-medium text-gray-900">
-                  Lapcart 
+                  Lapscart
                 </p>
+                <p>{t.visible}</p>
                 <p className="mt-1 text-sm text-gray-500">
                   {data != 0 && !data.profile.verified.email && !data.profile.verified.phone ? 'Please verify your Email address and Phone Number' : data != 0 && !data.profile.verified.email ? 'Please verify your Email address ' : data != 0 && !data.profile.verified.phone && 'Please verify your  Phone Number'}
-
                 </p>
               </div>
             </div>
@@ -99,7 +100,7 @@ function UserPersonalInfo() {
     }
 
   } else {
-    console.log("no dataaaaaaaaaaaaaaaaa");
+
   }
 
 
@@ -128,21 +129,22 @@ function UserPersonalInfo() {
   }
 
   const onSubmit = async (data) => {
-   
+
     await axios.put(`http://localhost:5000/api/user/updatename`, data, {
       headers: { 'Authorization': `Bearer ${userData.Utoken}` }
     })
       .then(res => {
+
         if (res.data.updated) {
-          const newName = res.data.name
+          const newName = res.data.user.name
           const profile = JSON.parse(localStorage.getItem('profileDetails'));
           localStorage.setItem(profile.name, newName);
           toast.success(res.data.msg, {
             id: 'updateSuccess'
           });
           setNameEdit(true)
-          dispatch(userProfileData({ id: userData.ID, token: userData.Utoken }))
-          //navigate("/user/login");
+          dispatch(userProfileData({ id: userData.uID, token: userData.Utoken }))
+
 
         } else {
 
@@ -151,6 +153,7 @@ function UserPersonalInfo() {
           });
         }
       }).catch(error => {
+        console.log(error);
         toast.error("Updation Failed", {
           id: 'updatefail'
         });
@@ -162,12 +165,30 @@ function UserPersonalInfo() {
   }
 
   const onSubmitPhone = async (data) => {
+    setPhoneEdit(true)
     console.log(data);
     await axios.put(`http://localhost:5000/api/user/updatephone`, data, {
       headers: { 'Authorization': `Bearer ${userData.Utoken}` }
     }).then((res) => {
+      if (res.data.sent) {
+        setShowModal(true);
+        console.log(showModal);
+        toast.success(res.data.msg, {
+          id: 'otpsentSuccess',
+          duration: 1000,
+        });
+      } else {
+        toast.error("OTP Sent Failed", {
+          id: 'otpfail',
+          duration: 1000,
+        });
+      }
       console.log(res);
+
     }).catch((error) => {
+      toast.error("OTP Sent Failed", {
+        id: 'otpfail'
+      });
       console.log(error);
     })
 
@@ -199,7 +220,7 @@ function UserPersonalInfo() {
 
   return (
     <>
-      <div className='container  w-full h-auto flex flex-col md:flex-row px-5 md:px-12 py-5 bg-gray-50'>
+      <div className='container  w-full h-auto flex flex-col md:flex-row px-2 md:px-12 py-5 bg-gray-50 relative'>
         <div className='sidebar w-full md:w-[30%] h-full flex flex-col  '>
           <div className='namebox w-full h-24  flex items-center px-8 shadow-md rounded-md bg-white'>
             <p>{<FaUserCircle size={48} className='text-[#A7F4A7]' />}</p>
@@ -210,35 +231,35 @@ function UserPersonalInfo() {
             </div>
           </div>
           <div className='detailsbox w-full h-auto  mt-4 shadow-md rounded-md bg-white'>
-            <div className='accsettings  px-10 pb-3  border-b border-gray-300'>
-              <div className='accheader flex w-full  py-4  space-x-3'>
+            <div className='accsettings  px-10 pb-3  border-b border-gray-300 cursor-pointer  hover:shadow-md'>
+              <div className='accheader flex w-full  py-4  space-x-3 '>
                 <p><FaUserAlt className='w-5 h-5 text-[#A7F4A7]' /></p>
                 <h3 className='font-bold '>ACCOUNT SETTINGS</h3>
               </div>
-              <p className='font-normal ml-10 mb-3'>Profile Information</p>
-              <p className='font-normal ml-10 mb-3'>Manage Address</p>
+              <p className='font-medium ml-10 mb-3 cursor-pointer '>Profile Information</p>
+              <p className='font-medium ml-10 mb-3 cursor-pointer'>Manage Address</p>
             </div>
-            <div className='orderbox  w-full   py-5 px-10  space-x-3 flex border-b border-gray-300   '>
+            <div className='orderbox  w-full   py-5 px-10  space-x-3 flex border-b border-gray-300  cursor-pointer  hover:shadow-md'>
               <p><HiDocumentText className='w-6 h-6 text-[#A7F4A7]' /></p>
               <h3 className='font-bold '>My Orders</h3>
             </div>
-            <div className='wishlistbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300   '>
+            <div className='wishlistbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300 cursor-pointer  hover:shadow-md '>
               <p><FaHeart className='w-5 h-5 text-[#A7F4A7]' /></p>
               <h3 className='font-bold '>My Wishlist</h3>
             </div>
-            <div className='couponbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300   '>
+            <div className='couponbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300 cursor-pointer hover:shadow-md'>
               <p><RiCoupon3Fill className='w-5 h-5 text-[#A7F4A7]' /></p>
               <h3 className='font-bold '>Coupons</h3>
             </div>
-            <div className='reviewsbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300   '>
+            <div className='reviewsbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300 cursor-pointer hover:shadow-md'>
               <p><FaStar className='w-5 h-5 text-[#A7F4A7]' /></p>
               <h3 className='font-bold '>Reviews and Ratings</h3>
             </div>
-            <div className='notificationbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300   '>
+            <div className='notificationbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300 cursor-pointer hover:shadow-md'>
               <p><MdNotifications className='w-5 h-5 text-[#A7F4A7]' /></p>
               <h3 className='font-bold '>All Notifications</h3>
             </div>
-            <div className='logoutbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300   '>
+            <div className='logoutbox  w-full px-10 py-5  space-x-3 flex border-b border-gray-300 cursor-pointer hover:shadow-md'>
               <p><FiLogOut className='w-5 h-5 text-[#A7F4A7]' /></p>
               <h3 className='font-bold '>Logout</h3>
             </div>
@@ -247,10 +268,10 @@ function UserPersonalInfo() {
 
         {/* infobox */}
         <div className='infobox w-full h-full md:w-[70%]  md:px-5 pb-5 mt-5 md:mt-0 '>
-          <div className='w-full h-full rounded-md md:p-12 p-1  bg-white shadow-md'>
+          <div className='w-full h-full rounded-md md:p-12 p-1  bg-white shadow-md relative'>
             <div className='flex w-full py-5 flex-auto place-content-evenly '>
-              <button className={personaltoggle ? 'text-2xl ml-5 text-[#A7F4A7] font-bold cursor-pointer' : ' text-2xl ml-5 font-semibold cursor-pointer'} onClick={handlePersonalInfo}>Personal Information</button>
-              <button className={passwordtoggle ? 'text-2xl ml-5 text-[#A7F4A7] font-bold cursor-pointer' : 'text-2xl ml-5 font-semibold cursor-pointer'} onClick={handleChangePassword}>Change Password</button>
+              <button className={personaltoggle ? 'text-md md:text-xl ml-5 text-[#A7F4A7] font-bold cursor-pointer' : ' text-md md:text-xl ml-5 font-semibold cursor-pointer'} onClick={handlePersonalInfo}>Personal Information</button>
+              <button className={passwordtoggle ? 'text-md md:text-xl ml-5 text-[#A7F4A7] font-bold cursor-pointer' : 'text-md md:text-xl ml-5 font-semibold cursor-pointer'} onClick={handleChangePassword}>Change Password</button>
             </div>
 
             {/* Personal Information Display */}
@@ -264,7 +285,7 @@ function UserPersonalInfo() {
                           htmlFor="name"
                           className="block text-sm font-medium text-gray-700 undefined"
                         >
-                          Name
+                          Name :
                         </label>
 
                         {nameedit &&
@@ -300,7 +321,7 @@ function UserPersonalInfo() {
                           htmlFor="email"
                           className="block text-sm font-medium text-gray-700 undefined"
                         >
-                          Email
+                          Email :
                         </label>
                         {data != 0 && !data.profile.verified.email &&
                           < button className='px-4 py-1 bg-[#A7f4A7] text-white rounded-lg font-semibold' onClick={handleEmailVerify}>Verify</button>
@@ -338,13 +359,13 @@ function UserPersonalInfo() {
                           htmlFor="phonenumber"
                           className="block text-sm font-medium text-gray-700 undefined"
                         >
-                          Phone Number
+                          Phone :
                         </label>
                         {data != 0 && !data.profile.verified.phone &&
                           <button className='px-4 py-1 bg-[#A7f4A7] text-white rounded-lg font-semibold'>Verify</button>
                         }
                         {phoneedit &&
-                          <MdOutlineModeEditOutline className='w-5 h-5' onClick={handlePhoneEdit} />
+                          <MdOutlineModeEditOutline className='w-5 h-5 cursor-pointer' onClick={handlePhoneEdit} />
                         }
                       </div>
 
@@ -470,11 +491,13 @@ function UserPersonalInfo() {
 
 
           </div>
-        </div>
-      </div >
-      <Toaster
 
-      />
+        </div>
+        {showModal && <PhoneOTPModal setOpenModal={setShowModal} />}
+      </div >
+
+      {/* <Toaster/> */}
+
     </>
   )
 }

@@ -9,13 +9,25 @@ export const userLoginData = createAsyncThunk(
 
     try {
 
-      const { data } = await axios.post("http://localhost:5000/api/user/login", {
-        ...arg,
-      },{
-        withCredentials: true,
-      })
-      return data;
+      if (arg.token) {
 
+        const { data } = await axios.post("http://localhost:5000/api/user/login",{},
+        { headers: { 'authorization': `Bearer ${arg.token}` } })
+        localStorage.setItem("loginDetails", JSON.stringify(data));
+        return data;
+
+      } else {
+
+        const { data } = await axios.post("http://localhost:5000/api/user/login", {
+          ...arg,
+        },{
+          withCredentials: true,
+        })
+        localStorage.setItem("loginDetails", JSON.stringify(data));
+        return data;
+      }
+
+    
     } catch (error) {
       let Errmessage = error.response.data;
       return rejectWithValue(Errmessage)

@@ -1,33 +1,41 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import toast from 'react-hot-toast';
 import { useForm, Controller } from "react-hook-form";
-import PhoneInput from 'react-phone-input-2'
-import 'react-phone-input-2/lib/style.css'
 import { useSelector, useDispatch } from 'react-redux';
 import { userRegisterData, reset } from '../../../features/User/registerSlice';
-
+import { GoogleLogin } from 'react-google-login'
+import toast from 'react-hot-toast';
+import PhoneInput from 'react-phone-input-2'
+import 'react-phone-input-2/lib/style.css'
+import axios from 'axios';
 
 function Signup() {
-
+    const google = window.google = window.google ? window.google : {}
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [state, setState] = useState()
+
     const { register, handleSubmit, watch, formState: { errors }, control } = useForm();
 
     const { data } = useSelector((state) => state.userRegister)
 
-    //console.log(registerData,"registerData");
+
     useEffect(() => {
         if (data.length != 0) {
+
             if (!data.created) {
                 toast.error(data.message, {
                     id: 'regErr'
                 })
                 //dispatch(reset());
             } else {
-                localStorage.setItem('details', JSON.stringify(data));
-                navigate("/user/verify")
+                if (data.verified) {
+                    localStorage.setItem("loginDetails", JSON.stringify(data));
+                    navigate("/")
+                } else {
+                    localStorage.setItem('details', JSON.stringify(data));
+                    navigate("/user/verify")
+                }
+
             }
         }
         //if(data)
@@ -38,12 +46,33 @@ function Signup() {
         dispatch(userRegisterData(data));
     };
 
+    useEffect(() => {
+
+        //  global google
+        google.accounts.id.initialize({
+            client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+            callback: handleCallbackResponse
+        });
+
+        google.accounts.id.renderButton(
+            document.getElementById("signUpDiv"),
+            { theme: "outline", size: "large" }
+        );
+
+    }, []);
+
+    function handleCallbackResponse(response) {
+        const jwt = response.credential
+        dispatch(userRegisterData({ token: jwt }));
+    }
+
+
 
     return (
         <div className="flex flex-col items-center min-h-screen py-8  sm:justify-center sm:pt-0 bg-gray-50">
             <div>
             </div>
-            <div className="w-full px-6 pt-8 mt-6 overflow-hidden bg-white shadow-md sm:max-w-lg sm:rounded-lg ">
+            <div className="w-full px-6 pt-8 pb-5 mt-6 overflow-hidden bg-white shadow-md sm:max-w-lg sm:rounded-lg ">
                 <form onSubmit={handleSubmit(onSubmit)} method='post'>
                     <div className='text-center'>
                         <h3 className="text-4xl font-bold text-[#A7F4A7]">
@@ -196,13 +225,16 @@ function Signup() {
                         <Link to="/user/login" className="text-black hover:underline font-bold">Log in</Link>
                     </span>
                 </div>
-                {/* <div className="flex items-center w-full my-4">
+                <div className="flex items-center w-full my-4">
                     <hr className="w-full" />
                     <p className="px-3 ">OR</p>
                     <hr className="w-full" />
                 </div>
-                <div className="my-6 space-y-2">
-                    <button
+                <div className="my-6 space-y-2  flex justify-center " >
+                    <div id='signUpDiv'>
+
+                    </div>
+                    {/* <button
                         aria-label="Login with Google"
                         type="button"
                         className="flex items-center justify-center w-full p-2 space-x-4 border rounded-md focus:ring-2 focus:ring-offset-1 dark:border-gray-400 focus:ring-violet-400"
@@ -229,8 +261,28 @@ function Signup() {
                             <path d="M25,3C12.85,3,3,12.85,3,25c0,11.03,8.125,20.137,18.712,21.728V30.831h-5.443v-5.783h5.443v-3.848 c0-6.371,3.104-9.168,8.399-9.168c2.536,0,3.877,0.188,4.512,0.274v5.048h-3.612c-2.248,0-3.033,2.131-3.033,4.533v3.161h6.588 l-0.894,5.783h-5.694v15.944C38.716,45.318,47,36.137,47,25C47,12.85,37.15,3,25,3z"></path>
                         </svg>
                         <p>Signup with Facebook</p>
-                    </button>
-                </div> */}
+                    </button> */}
+                    {/* <button
+                    className='text-center flex items-center justify-center bg-red-500'
+                    > */}
+                    {/* <GoogleLogin
+                        className=''
+
+                        clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+                        buttonText='Signup with google'
+                        onSuccess={responseGoogleSuccess}
+                        onFailure={responseGoogleError}
+                        cookiePolicy={'single_host_origin'}
+
+
+                    >
+
+                    </GoogleLogin> */}
+                    {/* </button> */}
+
+
+
+                </div>
             </div>
         </div>
 

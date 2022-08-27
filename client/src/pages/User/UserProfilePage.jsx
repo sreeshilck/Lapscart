@@ -5,7 +5,7 @@ import UserPersonalInfo from '../../components/User/Profile/UserPersonalInfo'
 function UserProfilePage() {
     return (
         <>
-            <Navbar />
+            <Navbar  />
             <UserPersonalInfo />
         </>
     )

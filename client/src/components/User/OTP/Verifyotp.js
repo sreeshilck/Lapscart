@@ -74,7 +74,7 @@ function Verifyotp() {
                             </button>
 
                             <Link to='/'
-                                className="w-full mt-2  p-2.5 flex-1 text-gray-800 rounded-md outline-none border ring-offset-2 ring-gray-200 focus:ring-2">
+                                className="w-full mt-2  p-2.5 flex-1 text-gray-800 rounded-md outline-none border ring-offset-2 ring-gray-200 focus:ring-2 text-center">
                                 Cancel
                             </Link>
                         </div>

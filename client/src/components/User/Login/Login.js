@@ -6,7 +6,7 @@ import { userLoginData } from '../../../features/User/loginSlice';
 import { useForm } from "react-hook-form";
 
 function Login() {
-
+    const google = window.google = window.google ? window.google : {}
     const { register, handleSubmit, formState: { errors } } = useForm();
 
     const dispatch = useDispatch();
@@ -15,14 +15,33 @@ function Login() {
     const { data } = useSelector((state) => state.userLogin)
 
 
+    useEffect(() => {
 
+        //  global google
+        google.accounts.id.initialize({
+            client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+            callback: handleCallbackResponse
+        });
+
+        google.accounts.id.renderButton(
+            document.getElementById("loginDiv"),
+            { theme: "outline", size: "large" }
+        );
+
+    }, []);
+
+    function handleCallbackResponse(response) {
+        const jwt = response.credential
+        dispatch(userLoginData({ token: jwt }));
+        console.log(response.credential, " %% jwt id tokennn");
+    }
 
     useEffect(() => {
         //const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
         if (data.length != 0) {
             if (data.isLoggedIn) {
-                localStorage.setItem("loginDetails", JSON.stringify(data));
-                 navigate('/')
+                //localStorage.setItem("loginDetails", JSON.stringify(data));
+                navigate('/')
             } else {
                 toast.error(data.msg, {
                     id: 'logverifyErr'
@@ -112,12 +131,18 @@ function Login() {
                             <Link to="/user/signup" className="text-black hover:underline font-bold">Signup</Link>
                         </span>
                     </div>
-                    {/* <div className="flex items-center w-full my-4">
+                    <div className="flex items-center w-full my-4">
                         <hr className="w-full" />
                         <p className="px-3 ">OR</p>
                         <hr className="w-full" />
                     </div>
-                     <div className="my-6 space-y-2">
+
+                    <div className="my-6 space-y-2  flex justify-center " >
+                        <div id='loginDiv'>
+
+                        </div>
+                    </div>
+                    {/* <div className="my-6 space-y-2">
                         <button
                             aria-label="Login with Google"
                             type="button"

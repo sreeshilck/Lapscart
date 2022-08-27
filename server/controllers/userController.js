@@ -4,34 +4,84 @@ const { sendOtp, verifyOtp } = require('../utils/twilioOtp')
 const getToken = require('../utils/getToken')
 const sendEmail = require('../utils/sendEmail')
 const crypto = require("crypto");
-const bcrypt = require("bcrypt")
-
-
+const bcrypt = require("bcrypt");
+const jwtDecode = require("jwt-decode");
+const { OAuth2Client } = require('google-auth-library');
 
 // User Signup
 // @route POST => /api/user/signup
 module.exports.userSignup = async (req, res) => {
     try {
-        let { name, email, phonenumber, password } = req.body;
 
-        phonenumber = +phonenumber.replace(/\D/g, '').slice(-10);
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+
+            const idToken = req.headers.authorization.split(' ')[1]
+
+            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+            client
+                .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
+                .then((response) => {
+
+                    const { email_verified, given_name, email, sub } = response.payload;
+                    const password = sub;
+                    const name = given_name;
+
+                    //check email is verified
+                    if (email_verified) {
+                        userModel.findOne({ email }).exec((err, user) => {
+
+                            // return if user Exists
+                            if (user) return res.status(409).json({ created: false, message: "User already exists" });
+
+                            //create new user
+                            const userData = new userModel({ name, email, password })
+                            userData.save((err, data) => {
+
+                                if (err) {
+                                    return res.status(400).json({ created: false, verified: false, msg: "User Signup is failed with google" });
+                                }
+
+                                getToken(data, 201, res);
+
+                            })
+
+                        })
+
+                    } else {
+                        res.status(400).json({ created: false, verified: false, msg: "Authentication Failed Try Again.." })
+                    }
+                })
+                .catch((error) => {
+                    console.log(error);
+                    res.status(400).json({ created: false, verified: false, msg: "Authentication Failed Try Again.." })
+
+                })
 
 
-        const userExists = await userModel.findOne({ email })
-        // check if user Exists
-        if (userExists) return res.status(409).json({ created: false, message: "User already exists" });
 
-        //create newuser
-        const newUser = await userModel.create({ name, email, phonenumber, password })
+        } else if (req.body) {
 
-        if (newUser) {
-            const sendOtpRes = await sendOtp(newUser.phonenumber);
-            res.status(201).json({ user: newUser._id, created: true, verified: false })
-        } else {
-            res.status(400).json({ created: false, verified: false, msg: "Registration Failed Try Again..." })
+            let { name, email, phonenumber, password } = req.body;
 
+            phonenumber = +phonenumber.replace(/\D/g, '').slice(-10);
+
+
+            const userExists = await userModel.findOne({ email })
+            // check if user Exists
+            if (userExists) return res.status(409).json({ created: false, message: "User already exists" });
+
+            //create newuser
+            const newUser = await userModel.create({ name, email, phonenumber, password })
+
+            if (newUser) {
+                const sendOtpRes = await sendOtp(newUser.phonenumber);
+                res.status(201).json({ user: newUser._id, created: true, verified: false })
+            } else {
+                res.status(400).json({ created: false, verified: false, msg: "Registration Failed Try Again..." })
+
+            }
         }
-
 
     } catch (error) {
         console.log(error);
@@ -93,27 +143,69 @@ module.exports.getResendOtp = async (req, res) => {
 // @route POST =>  /api/user/login
 module.exports.userLogin = async (req, res) => {
     try {
-        const { email, password } = req.body;
 
-        // Finding user in database
-        const user = await userModel.findOne({ email })
-        // check the user
-        if (!user) return res.status(400).json({ isLoggedIn: false, msg: "Invalid Email or Password" })
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            const idToken = req.headers.authorization.split(' ')[1]
 
-        // check if user is blocked
-        if (user.isBlocked) {
-            return res.status(403).json({ isLoggedIn: false, msg: "You are blocked..." })
-        } else {
-            // Checks if entered password is correct or not
-            const isPasswordMatched = await user.comparePassword(password);
-            if (!isPasswordMatched) {
-                return res.status(400).json({ isLoggedIn: false, msg: "Invalid Email or Password" });
+            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+            client
+                .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
+                .then((response) => {
+
+                    const { email_verified, email } = response.payload;
+
+                    //check email is verified
+                    if (email_verified) {
+                        //find user in db
+                        userModel.findOne({ email }).exec((err, user) => {
+
+                            // return if user Exists
+                            if (!user) return res.status(400).json({ isLoggedIn: false, message: "User login failed with google" });
+
+                            if (user.isBlocked) return res.status(403).json({ isLoggedIn: false, msg: "You are blocked..." });
+
+
+                            getToken(user, 200, res);
+
+
+                        })
+
+                    } else {
+                        res.status(400).json({ created: false, verified: false, msg: "Google Authentication Failed Try Again.." })
+                    }
+                })
+                .catch((error) => {
+                    console.log(error);
+                    res.status(400).json({ created: false, verified: false, msg: "Google Authentication Failed Try Again.." })
+
+                })
+
+        } else if (req.body) {
+            const { email, password } = req.body;
+
+            // Finding user in database
+            const user = await userModel.findOne({ email })
+            // check the user
+            if (!user) return res.status(400).json({ isLoggedIn: false, msg: "Invalid Email or Password" })
+
+            // check if user is blocked
+            if (user.isBlocked) {
+                return res.status(403).json({ isLoggedIn: false, msg: "You are blocked..." })
             } else {
-                // for token generate
-                getToken(user, 200, res);
-            }
+                // Checks if entered password is correct or not
+                const isPasswordMatched = await user.comparePassword(password);
+                if (!isPasswordMatched) {
+                    return res.status(400).json({ isLoggedIn: false, msg: "Invalid Email or Password" });
+                } else {
+                    // for token 
+                    getToken(user, 200, res);
+                }
 
+            }
         }
+
+
 
     } catch (error) {
         console.log(error);
@@ -217,6 +309,7 @@ module.exports.getUserProfile = async (req, res) => {
             const userProfile = await userModel.findById(req.user, { name: 1, email: 1, phonenumber: 1, verified: 1 });
             // if (!userProfile.verified.email && !userProfile.verified.phone ) res.status(200).json({profile:userProfile,email:false,phone:false})
             // else if (!userProfile.verified.email) res.status(200).json({profile:userProfile})
+
             res.status(200).json({ profile: userProfile })
         } else {
             res.status(400).json({ msg: "no user found" })
@@ -243,16 +336,18 @@ module.exports.updateUserName = async (req, res) => {
 }
 
 // Update User Phone
-// @ route PUT => api/user/updatephone
+// @route PUT => api/user/updatephone
 module.exports.updateUserPhone = async (req, res) => {
     try {
         console.log(req.body);
         const number = req.body.phonenumber;
         const user = await userModel.findById(req.user, { phonenumber: 1 })
         if (user.phonenumber == number) {
-            return res.status(200)
+            return res.status(200).json({ sent: false, msg: 'phone number has no change' })
         } else {
-            const sendOtpRes = await sendOtp(number);
+            //const sendOtpRes = await sendOtp(number);
+            req.session.newphone = number;
+            console.log(req.session.newphone, "   %%% session");
             res.status(200).json({ sent: true, msg: "OTP Sent Successfully" })
         }
 
@@ -263,14 +358,26 @@ module.exports.updateUserPhone = async (req, res) => {
     }
 }
 
+// Update Phone Otp Verify
+// @route POST => /api/user/phoneverifyotp
+module.exports.updatePhoneOtpVerify = async (req, res) => {
+    try {
+        console.log(req.body);
+        console.log(req.user);
+        console.log(req.session);
+    } catch (error) {
+
+    }
+}
+
+
 // Update User Password
-// @ route PUT => /api/user/changepassword
+// @route PUT => /api/user/changepassword
 module.exports.updateUserPassword = async (req, res) => {
     try {
         const { oldpassword, newpassword } = req.body
         console.log(oldpassword, newpassword)
         const userData = await userModel.findById(req.user)
-        //console.log(userData.password,"  userData.password");
 
         // Compare password
         const password = await bcrypt.compare(oldpassword, userData.password)
@@ -282,6 +389,8 @@ module.exports.updateUserPassword = async (req, res) => {
         // Hash new password
         const salt = await bcrypt.genSalt(10);
         hashpassword = await bcrypt.hash(newpassword, salt);
+
+        // save new password
         await userModel.findByIdAndUpdate(req.user, { password: hashpassword })
         res.status(200).json({ updated: true, msg: "Password Reset Successfully" })
 
