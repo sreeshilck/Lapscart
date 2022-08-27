@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from "react-hook-form";
 import { useSelector, useDispatch } from 'react-redux';
 import { userRegisterData, reset } from '../../../features/User/registerSlice';
-import { GoogleLogin } from 'react-google-login'
 import toast from 'react-hot-toast';
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
