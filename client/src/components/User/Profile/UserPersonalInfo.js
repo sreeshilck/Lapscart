@@ -54,6 +54,7 @@ function UserPersonalInfo() {
 
 
   const { data } = useSelector((state) => state.userProfile)
+  console.log(data, "===userprofile store dataaa");
   if (data != 0) {
 
     if (data.profile.verified) {
@@ -129,6 +130,7 @@ function UserPersonalInfo() {
   }
 
   const onSubmit = async (data) => {
+    console.log(data,"dataaa");
 
     await axios.put(`http://localhost:5000/api/user/updatename`, data, {
       headers: { 'Authorization': `Bearer ${userData.Utoken}` }
@@ -162,6 +164,7 @@ function UserPersonalInfo() {
 
   const onSubmitEmail = async (data) => {
     console.log(data);
+    setEmailEdit(true)
   }
 
   const onSubmitPhone = async (data) => {
@@ -336,7 +339,7 @@ function UserPersonalInfo() {
                           type="email"
                           name="email"
                           readOnly={emailedit ? true : false}
-                          defaultValue={data != 0 && data.profile.email && data.profile.email ? data.profile.email : ''}
+                          defaultValue={data.length !=0  && data.profile.email  ? data.profile.email : ''}
                           className={emailedit ? "block w-full h-10 mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-[#A7F4A7] outline-none focus:ring-opacity-50 p-5 bg-white cursor-not-allowed" : "block w-full h-10 mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-[#A7F4A7] outline-none focus:ring-opacity-50 p-5 bg-white"}
                           {...register2("email", { required: "Email is required", pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Enter valid email" } })}
                         />

@@ -9,9 +9,11 @@ const session = require('express-session')
 const app = express();
 require("dotenv").config();
 
-const userRoutes = require('./routes/userRoutes')
+const userRoutes = require ('./routes/userRoutes')
+const productRoutes = require ('./routes/productRoutes')
+const adminRoutes = require ('./routes/adminRoutes')
 
-//app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: true}));
 //app.use(cookieParser());
 app.use(express.json());
 
@@ -32,6 +34,8 @@ app.use(
 );
 
 app.use("/api/user", userRoutes)
+app.use("/api/product", productRoutes)
+app.use("/api/admin", adminRoutes)
 
 mongoose.connect("mongodb://localhost:27017/lapscart", {
     useNewUrlParser: true,

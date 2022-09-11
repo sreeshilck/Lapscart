@@ -1,4 +1,5 @@
 const userModel = require('../models/userModel')
+const addressModel = require('../models/addressModel')
 const jwt = require('jsonwebtoken');
 const { sendOtp, verifyOtp } = require('../utils/twilioOtp')
 const getToken = require('../utils/getToken')
@@ -7,6 +8,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwtDecode = require("jwt-decode");
 const { OAuth2Client } = require('google-auth-library');
+const { log } = require('console');
 
 // User Signup
 // @route POST => /api/user/signup
@@ -397,5 +399,60 @@ module.exports.updateUserPassword = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({})
+    }
+}
+
+
+// Add User Address
+// @route POST => /api/user/addaddress
+module.exports.addAddress = async (req, res) => {
+    try {
+        const { address, phonenumber, city, district, state, pincode } = req.body
+        const user = req.user
+        await addressModel.create({
+            user,
+            address,
+            phonenumber,
+            city,
+            district,
+            state,
+            pincode
+        })
+
+        res.status(201).json({success: true, msg: "Address added successfully"})
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ success: false, msg: "Internal Server Error" })
+    }
+}
+
+// Get Single User Address
+// @route GET => /api/user/getaddress
+module.exports.getUserAddress = async (req, res) => {
+    try {
+        const userId = req.user
+        const userAddress = await addressModel.find({ user: userId })
+        if (!userAddress) return res.status(400).json({ success: false, msg: "Address not found " })
+
+        res.status(200).json(userAddress)
+
+    } catch (error) {
+        res.status(500).json({success: false, msg: "Internal Server Error"})
+        console.error(error)
+    }
+}
+
+// Edit User Address
+// @route PUT => /api/user/editaddress
+module.exports.editUserAddress = async (req, res) => {
+    try {
+        const {address, city, district, state, pincode} = req.body
+        const userId = req.user
+        const updated = await addressModel.findOneAndUpdate({user: userId}, {address:address, city: city, district: district, state: state, pincode: pincode})
+        res.send(updated)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ success: false, msg: "Internal Server Error" })
     }
 }

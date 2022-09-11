@@ -2,8 +2,6 @@ import './App.css';
 import React from 'react';
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home';
-import Signup from './components/User/Signup/Signup';
-import Login from './components/User/Login/Login';
 import Errorpage from './pages/Errorpage';
 import UserPage from './pages/UserPage';
 import { Toaster } from 'react-hot-toast';
