@@ -25,14 +25,6 @@ const userSchema = new Schema({
         required: [true, "Password is Required"],
 
     },
-    wishlist: [
-        {
-            type: Array,
-            productId: Schema.Types.ObjectId,
-            ref: "",
-            productName: String,
-        }
-    ],
     isBlocked: {
         type: Boolean,
         default: false
@@ -90,4 +82,4 @@ userSchema.methods.getResetPasswordToken = function () {
 }
 
 
-module.exports = mongoose.model("Users", userSchema)
+module.exports = mongoose.model("user", userSchema)

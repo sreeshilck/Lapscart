@@ -54,7 +54,7 @@ function UserPersonalInfo() {
 
 
   const { data } = useSelector((state) => state.userProfile)
-  console.log(data, "===userprofile store dataaa");
+  
   if (data != 0) {
 
     if (data.profile.verified) {
@@ -130,7 +130,7 @@ function UserPersonalInfo() {
   }
 
   const onSubmit = async (data) => {
-    console.log(data,"dataaa");
+    
 
     await axios.put(`http://localhost:5000/api/user/updatename`, data, {
       headers: { 'Authorization': `Bearer ${userData.Utoken}` }

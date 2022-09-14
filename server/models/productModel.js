@@ -13,39 +13,45 @@ const reviewSchema = mongoose.Schema({
     timestamps: true
 })
 
+
+
 // Product schema
 const productSchema = new mongoose.Schema({
     name:{
         type : String,
         trim: true,
-        require: true,
-        maxLength: 20
+        required: true,
+        
+    },
+    brand: {
+        type: String,
+        trim: true,
+        required: true,
+        
     },
     description:{
         type: String,
-        require: true
+        required: true
     },
     price:{
         type: Number,
-        require: true,
+        required: true,
         default: 0.0
     },
     images: [
         {
-            public_id: {
-                type: String,
-                //required: true
-            },
-            url: {
-                type: String,
-               // required: true
-            },
+            type: Object,
+            required: true
         }
     ],
     stockCount:{
         type : Number,
         required: true,
         default: 0
+    },
+    category:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"category"
     },
     reviews: [reviewSchema],
     rating:{
@@ -58,7 +64,15 @@ const productSchema = new mongoose.Schema({
         required: true,
         default: 0
     },
+    couponDiscount: {
+        type: Number,
+        default: 0
+    },
+    isAvailable: {
+        type: Boolean,
+        default: true
+    }
 })
 
 
-module.exports = mongoose.model("Products" , productSchema)
+module.exports = mongoose.model("product" , productSchema)
