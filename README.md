@@ -67,6 +67,8 @@ JWT, Google auth
 
 To run this project, you will need to add the following environment variables to your .env file
 
+**Server:**
+
 `TWILIO_SERVICE_SID`
 `TWILIO_ACCOUNT_SID`
 `TWILIO_AUTH_TOKEN`
@@ -86,6 +88,9 @@ To run this project, you will need to add the following environment variables to
 `BASE_URL`
 `GOOGLE_CLIENT_ID`
 
+**Client :**
+
+`REACT_APP_GOOGLE_CLIENT_ID`
 
 ## RunLocally
 
@@ -141,4 +146,3 @@ Start the server
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
-4
