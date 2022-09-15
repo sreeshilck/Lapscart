@@ -5,7 +5,7 @@ An Ecommerce website using Node.js, React.js, Express.js, MongoDB
 
 
 ## Table of content
-
+ - [Screenshot](#Screenshot)
  - [Tech Stack](#TechStack)
  - [Features](#Features)
  - [Environment Variables](#EnvironmentVariables)
